@@ -37,6 +37,12 @@ h2{font-family:var(--font-display);font-weight:600;font-size:22px;margin:0 0 6px
 .seg3{grid-template-columns:repeat(3,1fr)}
 .seg3 button{text-align:center;font-size:14px;padding:9px 6px;line-height:1.3}
 .seg button:disabled{opacity:.45;cursor:default}
+.arch{border-top:1px solid var(--line);padding-top:10px}
+.arch summary{font-size:12.5px;font-weight:700;color:var(--moss);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}
+.arch summary::-webkit-details-marker{display:none}
+.arch summary::before{content:"\25B8";font-size:10px}
+.arch[open] summary::before{content:"\25BE"}
+.arch .seg{grid-template-columns:1fr;margin-top:8px}
 .group{display:grid;gap:8px}
 .lbl{margin:0;font-size:12.5px;font-weight:700;color:var(--moss)}
 button:focus-visible,canvas:focus-visible{outline:2px solid var(--moss);outline-offset:2px}
@@ -81,10 +87,16 @@ canvas:active{cursor:grabbing}
     <p class="lbl" id="lblstyle">Stil</p>
     <div class="seg" role="radiogroup" aria-labelledby="lblstyle" id="styleseg">
       <button type="button" role="radio" data-v="washi" aria-checked="false">Washi<small>hell, Leiste und Reliefbilder</small></button>
-      <button type="button" role="radio" data-v="lamelle" aria-checked="false">Lamelle<small>Holzwand hinter dem Board</small></button>
+      <button type="button" role="radio" data-v="lamelle" aria-checked="false">Lamelle<small>Board links, Paneele rechts</small></button>
       <button type="button" role="radio" data-v="moos" aria-checked="false">Moos<small>dunkle Akzentwand</small></button>
       <button type="button" role="radio" data-v="ist" aria-checked="false">Ist-Zustand<small>zum Vergleich</small></button>
     </div>
+    <details class="arch" id="archive">
+      <summary>Archiv</summary>
+      <div class="seg" role="radiogroup" aria-label="Archivierte Entwuerfe" id="archseg">
+        <button type="button" role="radio" data-v="lamelle-v1" aria-checked="false">Lamelle v1<small>erste Fassung, Board rechts</small></button>
+      </div>
+    </details>
   </div>
   <div class="group">
     <p class="lbl" id="lbllight">Deckenlicht</p>
@@ -122,30 +134,39 @@ if(!renderer){ document.getElementById('fallback').hidden=false; canvas.style.di
 /* ---------- Beschreibungen ---------- */
 var INFO={
   washi:{name:'Washi',lead:'Helle Kalkfarbe, Eichenrahmen und eine durchlaufende Leiste. Der kleinste Eingriff, alles rückbaubar.',
-    walls:[['Whiteboard-Wand','Whiteboard 180 × 100 cm im Eichenrahmen. Darunter läuft eine Eichenleiste, die Stifte trägt und einen Druck und eine Pflanze aufnimmt.'],
-           ['Wand gegenüber','Zwei Reliefbilder aus Akustikfilz im Eichenrahmen, je 70 × 150 cm und rund 9 cm tief. Gestufte Kreis- und Bogenformen liegen auf gerilltem Grund, angelehnt an die geharkten Linien eines Steingartens. Sie dämpfen den Schall hinter Platz 1 und 3.'],
-           ['Neben dem Fenster','Links eine Hängerolle aus gerilltem Filz mit gestufter Mondscheibe, 42 × 125 cm. Rechts zwei kurze Eichenborde für Pflanzen, darüber eine runde Papierleuchte.'],
+    walls:[['Linke Wand, hinter Platz 1','Whiteboard 180 × 100 cm im Eichenrahmen. Darunter läuft eine 3,2 m lange Eichenleiste, die Stifte trägt und rechts neben dem Board einen Druck und eine Pflanze aufnimmt.'],
+           ['Rechte Wand','Zwei Reliefbilder aus Akustikfilz im Eichenrahmen, je 70 × 150 cm und rund 9 cm tief. Gestufte Kreis- und Bogenformen liegen auf gerilltem Grund, angelehnt an die geharkten Linien eines Steingartens. Sie dämpfen den Schall hinter Platz 2 und 4.'],
+           ['Neben dem Fenster','Rechts eine Hängerolle aus gerilltem Filz mit gestufter Mondscheibe, 42 × 125 cm. Links zwei kurze Eichenborde für Pflanzen, darüber eine runde Papierleuchte.'],
            ['Über dem Regal','Zwei versetzte Eichenborde mit warmem LED-Band, Keramik und Hängepflanze.'],
            ['Fenster','Halbtransparentes Papierrollo in der Nische.'],
            ['Farbe','Alle Wände in Sand statt Reinweiß.']],
     mats:[['#e8dfd0','Kalkfarbe Sand'],['#c9a377','Eiche natur'],['#e3d9c5','Akustikfilz Sand'],['#ae9572','Filz Ton'],['#959b80','Filz Salbei'],['#fcfcfa','Whiteboard']],
     effort:1,effortText:'Streichen und rund zwanzig Bohrlöcher. Die Reliefbilder sind Maßanfertigung oder Eigenbau.'},
-  lamelle:{name:'Lamelle',lead:'Eine raumhohe Lamellenwand rahmt das Whiteboard, läuft um die Ecke bis ans Fenster und verbessert die Akustik im Viererbüro.',
-    walls:[['Whiteboard-Wand','Eichenlamellen auf schwarzem Akustikfilz über die ganze Wand. Davor ein rahmenloses Glas-Whiteboard 200 × 100 cm, darüber eine schmale schwarze Leuchte.'],
+  lamelle:{name:'Lamelle',lead:'Das Whiteboard wandert auf die linke Raumseite hinter Platz 1. Gegenüber den beiden linken Plätzen steht eine Wand aus Eichenpaneelen, unregelmäßig gesetzt und mit Lücken für andere Wandbehänge.',
+    walls:[['Linke Wand, hinter Platz 1','Rahmenloses Glas-Whiteboard 180 × 100 cm auf Abstandshaltern. Darunter ein Eichenbord für die Stifte, darüber eine schmale schwarze Leuchte.'],
+           ['Linke Wand, hinter Platz 2','Zwei runde Reliefs, Ø 96 und Ø 48 cm, aus senkrechten Stäben in Eiche und Filz Ton. Die Stäbe stehen unterschiedlich weit vor und bilden ein unsymmetrisches Wellenmuster, gefasst von einem Eichenring.'],
+           ['Rechte Wand, gegenüber den linken Plätzen','Holzpaneele in Eiche, von der Rückwand aus unregelmäßig gesetzt: Felder von 0,4 bis 1,2 m, teils raumhoch, teils auf 2,3 m endend. In den Lücken hängen ein gerahmter Druck, eine Filzrolle, zwei Filzscheiben und ein zweiter Druck über einem kurzen Bord. Auf Blickhöhe der beiden linken Plätze steht durchgehend Holz.'],
+           ['Neben dem Fenster','Rechts genau 1 m Lamellen, von der rechten Wand aus gemessen, mit einem Bord für eine Hängepflanze. Links ein Eichenbord und ein kleines Wellenrelief, Ø 40 cm.'],
+           ['Über dem Regal','Ein langes Eichenbord mit LED-Band.'],
+           ['Farbe','Übrige Wandflächen und die Lücken in warmem Greige.']],
+    mats:[['#c9a377','Eiche'],['#262524','Akustikfilz'],['#e9e3d7','Greige'],['#bf8f6f','Filz Ton'],['#e3d8c4','Filz Sand'],['#fcfcfa','Glasboard']],
+    effort:3,effortText:'Die beiden Wellenreliefs sind Maßanfertigung oder CNC-Eigenbau. Dazu rund 9 m² Paneele in fünf Feldern und sechs Wandbehänge.'},
+  moos:{name:'Moos',lead:'Das Moosgrün zieht von der rechten Wand um die Ecke bis ans Fenster. Der Rest bleibt hell, damit der Raum nicht schrumpft.',
+    walls:[['Rechte Wand','Kalkfarbe Moosgrün über die ganze Wand. Zwei Borde in Räuchereiche mit LED-Band, daneben ein 1,2 m breites Lamellenfeld mit gerahmtem Druck.'],
+           ['Neben dem Fenster','Rechts läuft das Moosgrün weiter bis an die Fensternische, mit einem Bord in Räuchereiche. Links ein 60 cm breiter Lamellenstreifen als Echo der Akzentwand.'],
+           ['Linke Wand, hinter Platz 1','Whiteboard 180 × 100 cm mit schmalem schwarzem Rahmen. Daneben eine Pinnwand aus moosgrünem Filz auf gleicher Höhe.'],
+           ['Über dem Regal','Zwei kleine Drucke in schwarzen Rahmen.'],
+           ['Farbe','Übrige Wände warmweiß, auch der Wandvorsprung links.']],
+    mats:[['#666d57','Kalkfarbe Moos'],['#6b5340','Räuchereiche'],['#ebe5d9','Warmweiß'],['#1c1c1e','Schwarz matt'],['#fcfcfa','Whiteboard']],
+    effort:2,effortText:'Eineinhalb Wände zweimal streichen, drei Lamellenpaneele, drei Borde.'},
+  'lamelle-v1':{name:'Lamelle v1',lead:'Archivierte erste Fassung: eine raumhohe Lamellenwand rahmt das Whiteboard auf der rechten Raumseite, läuft um die Ecke bis ans Fenster und verbessert die Akustik im Viererbüro.',
+    walls:[['Whiteboard-Wand (rechts)','Eichenlamellen auf schwarzem Akustikfilz über die ganze Wand. Davor ein rahmenloses Glas-Whiteboard 200 × 100 cm, darüber eine schmale schwarze Leuchte.'],
            ['Neben dem Fenster','Rechts laufen die Lamellen um die Ecke bis an die Fensternische, mit einem kurzen Bord für eine Hängepflanze. Links ein Eichenbord und eine kleine Filzscheibe in Ton.'],
-           ['Wand gegenüber','Zwei runde Filzpaneele in Ton und Sand, Ø 100 und Ø 60 cm.'],
+           ['Linke Wand','Zwei runde Filzpaneele in Ton und Sand, Ø 100 und Ø 60 cm, flach.'],
            ['Über dem Regal','Ein langes Eichenbord mit LED-Band.'],
            ['Farbe','Übrige Wände in warmem Greige.']],
     mats:[['#c9a377','Eichenlamellen'],['#262524','Akustikfilz'],['#e9e3d7','Greige'],['#bf8f6f','Filz Ton'],['#fcfcfa','Glasboard']],
     effort:2,effortText:'Rund 15 m² Paneele verschrauben, gängiges Format 60 × 240 cm. Raumhöhe vorher messen.'},
-  moos:{name:'Moos',lead:'Das Moosgrün zieht von der Wand gegenüber um die Ecke bis ans Fenster. Der Rest bleibt hell, damit der Raum nicht schrumpft.',
-    walls:[['Wand gegenüber','Kalkfarbe Moosgrün samt Wandvorsprung. Zwei Borde in Räuchereiche mit LED-Band, daneben ein 1,2 m breites Lamellenfeld mit gerahmtem Druck.'],
-           ['Neben dem Fenster','Links läuft das Moosgrün weiter bis an die Fensternische, mit einem Bord in Räuchereiche. Rechts ein 60 cm breiter Lamellenstreifen als Echo der Akzentwand.'],
-           ['Whiteboard-Wand','Whiteboard 180 × 100 cm mit schmalem schwarzem Rahmen. Daneben eine Pinnwand aus moosgrünem Filz auf gleicher Höhe.'],
-           ['Über dem Regal','Zwei kleine Drucke in schwarzen Rahmen.'],
-           ['Farbe','Übrige Wände warmweiß.']],
-    mats:[['#666d57','Kalkfarbe Moos'],['#6b5340','Räuchereiche'],['#ebe5d9','Warmweiß'],['#1c1c1e','Schwarz matt'],['#fcfcfa','Whiteboard']],
-    effort:2,effortText:'Eineinhalb Wände zweimal streichen, drei Lamellenpaneele, drei Borde.'},
   ist:{name:'Ist-Zustand',lead:'So steht der Raum heute da, aufgeräumt und ohne Wandgestaltung.',
     walls:[['Wände','Reinweiß, keine Bilder, kein Whiteboard.']],
     mats:[['#f3f2ef','Reinweiß'],['#a5a29b','Trennwände Filz'],['#c9a377','Tischplatten']],
@@ -155,8 +176,8 @@ var VIEWS=[
   ['ost','Überblick',[-3.4,5.0,8.4],[2.3,0.8,2.2],40],
   ['west','Überblick gedreht',[7.9,5.0,8.4],[2.1,0.8,2.2],40],
   ['oben','Grundriss',[2.22,13.5,2.5],[2.22,0,2.25],26],
-  ['board','Whiteboard-Wand',[-4.2,1.8,2.25],[4.44,1.35,2.25],38],
-  ['gegen','Wand gegenüber',[8.6,1.8,2.25],[0,1.35,2.25],38],
+  ['board','Wand rechts',[-4.2,1.8,2.25],[4.44,1.35,2.25],38],
+  ['gegen','Wand links',[8.6,1.8,2.25],[0,1.35,2.25],38],
   ['fenster','Fensterwand',[2.22,1.9,9.4],[2.22,1.35,0],38],
   ['regal','Regalwand',[1.2,2.1,-4.9],[2.2,1.15,4.5],38],
   ['platz','Von Platz 1',[0.55,1.7,3.75],[4.44,1.5,1.7],64],
@@ -172,6 +193,8 @@ var LIGHTINFO={
   moos:{haengend:'Drei schwarze Pendelleuchten mit Schirm, Ø 45 cm, in einer Reihe über der Tischmitte.',
         einzeln:'Vier kleine schwarze Pendelleuchten, Ø 30 cm, je eine über jedem Arbeitsplatz.'}
 };
+LIGHTINFO['lamelle-v1']=LIGHTINFO.lamelle;
+var ARCHIVE=['lamelle-v1'];
 var current='washi',light='standard';
 
 function fillPanel(key){
@@ -187,11 +210,14 @@ function fillPanel(key){
   if(v.effort){ var b=document.createElement('b'),s=document.createElement('span'),t=document.createElement('span'); s.className='dots'; s.setAttribute('aria-hidden','true');
     s.textContent='●●●'.slice(0,v.effort)+'○○○'.slice(0,3-v.effort); b.textContent='Aufwand '+['','gering','mittel','hoch'][v.effort]; t.textContent=v.effortText; ef.appendChild(s); ef.appendChild(b); ef.appendChild(t); ef.style.display=''; }
   else ef.style.display='none';
-  Array.prototype.forEach.call(document.querySelectorAll('#styleseg button'),function(b){ b.setAttribute('aria-checked',b.dataset.v===key?'true':'false'); });
+  Array.prototype.forEach.call(document.querySelectorAll('#styleseg button,#archseg button'),function(b){ b.setAttribute('aria-checked',b.dataset.v===key?'true':'false'); });
+  if(ARCHIVE.indexOf(key)>=0) document.getElementById('archive').open=true;
   Array.prototype.forEach.call(document.querySelectorAll('#lightseg button'),function(b){ var on=(key==='ist'?'standard':light)===b.dataset.l; b.setAttribute('aria-checked',on?'true':'false'); b.disabled=(key==='ist'&&b.dataset.l!=='standard'); });
 }
 function hashName(){ return current+(light==='standard'||current==='ist'?'':'-'+light); }
-function readHash(){ var p=(location.hash||'').replace('#','').split('-'); return {v:INFO[p[0]]?p[0]:null,l:LIGHTS.indexOf(p[1])>0?p[1]:'standard'}; }
+function readHash(){ var s=(location.hash||'').replace('#',''),l='standard',i=s.lastIndexOf('-');
+  if(i>0&&LIGHTS.indexOf(s.slice(i+1))>0){ l=s.slice(i+1); s=s.slice(0,i); }
+  return {v:INFO[s]?s:null,l:l}; }
 function writeHash(){ try{ if(location.hash!=='#'+hashName()) location.hash=hashName(); }catch(e){} }
 function setVariant(key,fromHash){
   if(!INFO[key]) key='washi';
@@ -205,7 +231,7 @@ function setLight(l,fromHash){
   if(renderer) buildLight(current,light);
   if(!fromHash) writeHash();
 }
-Array.prototype.forEach.call(document.querySelectorAll('#styleseg button'),function(b){ b.addEventListener('click',function(){ setVariant(b.dataset.v); }); });
+Array.prototype.forEach.call(document.querySelectorAll('#styleseg button,#archseg button'),function(b){ b.addEventListener('click',function(){ setVariant(b.dataset.v); }); });
 Array.prototype.forEach.call(document.querySelectorAll('#lightseg button'),function(b){ b.addEventListener('click',function(){ setLight(b.dataset.l); }); });
 window.addEventListener('hashchange',function(){ if(location.hash==='#'+hashName()) return; var h=readHash(); if(!h.v) return; light=h.l; setVariant(h.v,true); });
 var h0=readHash(); light=h0.l;
@@ -436,14 +462,14 @@ function buildLight(style,mode){
   clearGroup(lightFix); pend.forEach(function(p){ p.intensity=0; });
   if(style==='ist') mode='standard';
   showPanels=(mode==='standard'); lamp.intensity=showPanels?0.66:0.36;
-  var spots=[];
+  var spots=[],bars=(style==='lamelle'||style==='lamelle-v1');
   if(mode==='haengend'){
     if(style==='washi'){ spots=[[C0,1.1],[C0,2.7]]; spots.forEach(function(s){ lantern(s[0],s[1],0.33,0.8); }); }
-    else if(style==='lamelle'){ spots=[[C0,1.15],[C0,2.65]]; spots.forEach(function(s){ lightBar(s[0],s[1],1.4); }); }
+    else if(bars){ spots=[[C0,1.15],[C0,2.65]]; spots.forEach(function(s){ lightBar(s[0],s[1],1.4); }); }
     else { spots=[[C0,0.9],[C0,1.9],[C0,2.9]]; spots.forEach(function(s){ dome(s[0],s[1],0.225); }); }
   } else if(mode==='einzeln'){
     spots=DESKC;
-    spots.forEach(function(s){ if(style==='washi') lantern(s[0],s[1],0.2,0.85); else if(style==='lamelle') lightBar(s[0],s[1],1.2); else dome(s[0],s[1],0.15); });
+    spots.forEach(function(s){ if(style==='washi') lantern(s[0],s[1],0.2,0.85); else if(bars) lightBar(s[0],s[1],1.2); else dome(s[0],s[1],0.15); });
   }
   var k=spots.length>3?0.36:spots.length===3?0.44:0.58;
   spots.forEach(function(s,i){ pend[i].position.set(s[0],HB-0.06,s[1]); pend[i].intensity=k; });
@@ -464,6 +490,30 @@ function slats(g,u0,u1,y0,y1,hex,seed){ var hgt=y1-y0,yc=(y0+y1)/2; bx(g,u1-u0,h
   im.receiveShadow=true; g.add(im); }
 function floatShelf(g,u0,u1,y,mat,depth){ depth=depth||0.2; bx(g,u1-u0,0.035,depth,mat,(u0+u1)/2,y,depth/2); bx(g,u1-u0-0.08,0.006,0.012,M.led,(u0+u1)/2,y-0.021,0.02,{noCast:true}); }
 function disc(g,u,y,r,hex,d){ var m=new T.Mesh(new T.CylinderGeometry(r,r,0.03,56),std(hex,1)); m.rotation.x=Math.PI/2; m.position.set(u,y,d); m.castShadow=true; m.receiveShadow=true; g.add(m); }
+/* Runder Reliefkreis: senkrechte Staebe, deren Auszug einer unsymmetrischen Wellenfunktion folgt.
+   Jede Spalte ist in Segmente geteilt, die ohne Fuge aneinanderstossen, damit der Stab durchlaufend wirkt. */
+function waveDisc(g,uc,yc,R,hex,seed,amp){
+  var r=rng(seed),pitch=0.046,base=C(hex),cells=[],i,j,
+      p1=r()*6.283,p2=r()*6.283,p3=r()*6.283,
+      kx1=2.2+r()*1.6,ky1=1.3+r()*1.2,kx2=4.4+r()*2.2,ky2=3.0+r()*1.8,kx3=1.0+r()*0.9,ky3=5.2+r()*2.4,
+      nx=Math.max(1,Math.round(2*R/pitch));
+  for(i=0;i<nx;i++){
+    var x=-R+pitch*(i+0.5),hh=Math.sqrt(Math.max(0,R*R-x*x));
+    if(hh<0.015) continue;
+    var ny=Math.max(1,Math.round(2*hh/0.022)),sh=2*hh/ny;
+    for(j=0;j<ny;j++){
+      var y=-hh+sh*(j+0.5),
+          w=0.54*Math.sin(kx1*x+ky1*y+p1)+0.3*Math.sin(kx2*x-ky2*y+p2)+0.16*Math.sin(kx3*x+ky3*y+p3);
+      cells.push([x,y,sh,Math.max(0,Math.min(1,(w+1)/2))]);
+    }
+  }
+  var back=new T.Mesh(new T.CylinderGeometry(R+0.012,R+0.012,0.012,64),M.feltDark); back.rotation.x=Math.PI/2; back.position.set(uc,yc,0.006); back.receiveShadow=true; g.add(back);
+  var ring=new T.Mesh(new T.TorusGeometry(R+0.024,0.016,8,72),M.oak); ring.position.set(uc,yc,0.03); ring.castShadow=true; ring.receiveShadow=true; g.add(ring);
+  var im=new T.InstancedMesh(new T.BoxGeometry(pitch-0.019,1,1),new T.MeshStandardMaterial({roughness:0.74}),cells.length),
+      m4=new T.Matrix4(),sv=new T.Vector3(),col=new T.Color();
+  cells.forEach(function(c,k){ var t=0.015+amp*c[3]; sv.set(1,c[2]+0.0015,t); m4.makeTranslation(uc+c[0],yc+c[1],0.008+t/2); m4.scale(sv); im.setMatrixAt(k,m4); col.copy(base).multiplyScalar(0.64+0.62*c[3]); im.setColorAt(k,col); });
+  im.castShadow=true; im.receiveShadow=true; im.frustumCulled=false; g.add(im);
+}
 /* Filzreliefs */
 var FELT={base:'#e3d9c5',ridge:'#ece4d3',a:'#d8cab0',b:'#c6b08f',c:'#ae9572',d:'#94795a',sage:'#959b80',sageDark:'#7c836a'};
 function reliefBase(g,uc,yc,w,h,withFrame){ bx(g,w,h,0.02,std(FELT.base,1),uc,yc,0.012);
@@ -481,20 +531,21 @@ var PAINT={
   ist:{all:'#f3f2ef',flat:true},
   washi:{all:'#e8dfd0'},
   lamelle:{all:'#e9e3d7'},
-  moos:{all:'#ebe5d9',W:'#666d57',P:'#666d57'}
+  'lamelle-v1':{all:'#e9e3d7'},
+  moos:{all:'#ebe5d9',E:'#666d57'}
 };
 var BUILD={
   ist:function(){},
   washi:function(){
-    /* Whiteboard-Wand */
-    ledge(decor.E,0.5,3.3,0.9,M.oak); whiteboard(decor.E,1.9,0.975,1.8,1.0,M.oak); markers(decor.E,1.45,0.911,0.05);
-    framed(decor.E,3.08,1.27,0.26,0.34,art('ring'),M.oak,0.016,0.03); plant(decor.E,0.72,0.911,0.045,'trail',0.6,M.potClay);
-    /* Wand gegenüber: zwei Filzreliefs */
-    reliefBase(decor.W,2.05,1.57,0.7,1.5,true); reliefBase(decor.W,3.15,1.57,0.7,1.5,true);
-    stepped(decor.W,2.05,1.38,[0.25,0.19,0.13,0.065]);
-    (function(){ var rod=new T.Mesh(new T.CylinderGeometry(0.026,0.026,0.36,20),std(FELT.c,1)); rod.position.set(2.05,2.0,0.03); rod.castShadow=true; rod.receiveShadow=true; decor.W.add(rod); })();
-    [[0.48,0.78,FELT.a],[0.36,0.66,FELT.b],[0.24,0.54,FELT.c],[0.12,0.42,FELT.d]].forEach(function(l,i){ archLayer(decor.W,3.15,0.91,l[0],l[1],0.022+i*0.018,0.018,l[2]); });
-    puck(decor.W,3.15,2.0,0.085,0.022,0.024,FELT.sage); puck(decor.W,3.15,2.0,0.045,0.046,0.016,FELT.sageDark);
+    /* Linke Wand: Whiteboard hinter Platz 1 (u 1,8), die Leiste läuft am Wandvorsprung vorbei durch */
+    ledge(decor.W,0.9,4.05,0.9,M.oak); whiteboard(decor.W,1.8,0.975,1.8,1.0,M.oak); markers(decor.W,1.35,0.911,0.05);
+    framed(decor.W,3.3,1.27,0.26,0.34,art('ring'),M.oak,0.016,0.03); plant(decor.W,3.85,0.911,0.045,'trail',0.6,M.potClay);
+    /* Rechte Wand: zwei Filzreliefs, jetzt hinter den rechten Plätzen */
+    reliefBase(decor.E,2.45,1.57,0.7,1.5,true); reliefBase(decor.E,1.35,1.57,0.7,1.5,true);
+    stepped(decor.E,2.45,1.38,[0.25,0.19,0.13,0.065]);
+    (function(){ var rod=new T.Mesh(new T.CylinderGeometry(0.026,0.026,0.36,20),std(FELT.c,1)); rod.position.set(2.45,2.0,0.03); rod.castShadow=true; rod.receiveShadow=true; decor.E.add(rod); })();
+    [[0.48,0.78,FELT.a],[0.36,0.66,FELT.b],[0.24,0.54,FELT.c],[0.12,0.42,FELT.d]].forEach(function(l,i){ archLayer(decor.E,1.35,0.91,l[0],l[1],0.022+i*0.018,0.018,l[2]); });
+    puck(decor.E,1.35,2.0,0.085,0.022,0.024,FELT.sage); puck(decor.E,1.35,2.0,0.045,0.046,0.016,FELT.sageDark);
     /* über dem Regal */
     floatShelf(decor.S,2.5,3.9,1.3,M.oak); floatShelf(decor.S,2.0,3.4,1.72,M.oak);
     plant(decor.S,3.7,1.318,0.1,'trail',0.8,M.potWhite); vase(decor.S,2.8,1.318,0.1,0.9,M.stone); bowl(decor.S,3.15,1.318,0.1,0.8,M.potDark);
@@ -502,16 +553,50 @@ var BUILD={
     setGlow(0,'S',3.2,1.2,0.14,0.55); setGlow(1,'S',2.7,1.62,0.14,0.4);
     /* Fenster: Papierrollo */
     var blind=new T.Mesh(new T.PlaneGeometry(WIN1-WIN0-0.08,0.85),M.paper); blind.position.set(CXW,1.975,-0.14); decor.N.add(blind); bx(decor.N,WIN1-WIN0-0.08,0.018,0.018,M.oak,CXW,1.55,-0.14,{noCast:true});
-    /* links vom Fenster: Hängerolle aus Filz */
-    reliefBase(decor.N,FL,1.6,0.42,1.25,false); stepped(decor.N,FL,1.9,[0.14,0.1,0.055]);
-    /* rechts vom Fenster: Pflanzenborde und Papierleuchte */
-    floatShelf(decor.N,FR-0.34,FR+0.34,1.1,M.oak,0.18); floatShelf(decor.N,FR-0.34,FR+0.34,1.5,M.oak,0.18);
-    plant(decor.N,FR+0.2,1.518,0.09,'trail',0.75,M.potWhite); vase(decor.N,FR-0.18,1.518,0.09,0.8,M.stone);
-    plant(decor.N,FR-0.16,1.118,0.09,'pilea',0.8,M.potClay); bowl(decor.N,FR+0.18,1.118,0.09,0.8,M.potDark);
-    (function(){ var l=new T.Mesh(new T.CylinderGeometry(0.19,0.19,0.07,48),M.paperLamp); l.rotation.x=Math.PI/2; l.position.set(FR,2.03,0.045); decor.N.add(l); })();
-    setGlow(2,'N',FR,2.0,0.32,0.55);
+    /* rechts vom Fenster: Hängerolle aus Filz, Echo der Reliefbilder gegenüber */
+    reliefBase(decor.N,FR,1.6,0.42,1.25,false); stepped(decor.N,FR,1.9,[0.14,0.1,0.055]);
+    /* links vom Fenster: Pflanzenborde und Papierleuchte, neben der Whiteboard-Wand */
+    floatShelf(decor.N,FL-0.34,FL+0.34,1.1,M.oak,0.18); floatShelf(decor.N,FL-0.34,FL+0.34,1.5,M.oak,0.18);
+    plant(decor.N,FL+0.2,1.518,0.09,'trail',0.75,M.potWhite); vase(decor.N,FL-0.18,1.518,0.09,0.8,M.stone);
+    plant(decor.N,FL-0.16,1.118,0.09,'pilea',0.8,M.potClay); bowl(decor.N,FL+0.18,1.118,0.09,0.8,M.potDark);
+    (function(){ var l=new T.Mesh(new T.CylinderGeometry(0.19,0.19,0.07,48),M.paperLamp); l.rotation.x=Math.PI/2; l.position.set(FL,2.03,0.045); decor.N.add(l); })();
+    setGlow(2,'N',FL,2.0,0.32,0.55);
   },
   lamelle:function(){
+    /* Linke Wand, u = 4,5 − z: Platz 1 liegt bei u 1,8, der zweite linke Platz bei u 3,4 */
+    /* hinter Platz 1: rahmenloses Glas-Whiteboard mit Stiftbord und Leuchte */
+    whiteboard(decor.W,1.8,0.95,1.8,1.0,null,0.04);
+    [[0.97,1.0],[2.63,1.0],[0.97,1.9],[2.63,1.9]].forEach(function(p){ var c=new T.Mesh(new T.CylinderGeometry(0.012,0.012,0.06,12),M.silver); c.rotation.x=Math.PI/2; c.position.set(p[0],p[1],0.03); decor.W.add(c); });
+    bx(decor.W,0.5,0.018,0.07,M.oak,1.8,0.9,0.055); markers(decor.W,1.62,0.909,0.055);
+    bx(decor.W,1.4,0.03,0.045,M.black,1.8,2.12,0.07); bx(decor.W,1.34,0.006,0.03,M.led,1.8,2.102,0.07,{noCast:true}); bx(decor.W,0.03,0.03,0.05,M.black,1.8,2.12,0.03);
+    /* hinter dem zweiten linken Platz: die Kreise, jetzt als dreidimensionales Wellenrelief */
+    waveDisc(decor.W,3.45,1.5,0.48,'#c9a377',61,0.12);
+    waveDisc(decor.W,4.14,2.0,0.24,'#bf8f6f',62,0.07);
+    setGlow(1,'W',1.8,2.0,0.2,0.5);
+    /* Rechte Wand gegenüber den linken Plätzen, u = z: Holzpaneele, von der Rückwand (u 4,5) aus unregelmäßig.
+       Die Blickachsen der linken Plätze liegen bei u 1,1 und u 2,7 und bleiben durchgehend mit Holz belegt. */
+    [[3.95,4.48,H],[2.42,3.62,H],[1.56,2.08,2.32],[0.72,1.36,H],[0,0.40,2.48]].forEach(function(f,i){
+      slats(decor.E,f[0],f[1],0.07,f[2],'#c9a377',3+i*7);
+      if(f[2]<H-0.01) bx(decor.E,f[1]-f[0],0.022,0.034,M.oak,(f[0]+f[1])/2,f[2]+0.011,0.017);
+    });
+    /* in den Lücken: andere Wandbehänge */
+    framed(decor.E,3.785,1.62,0.26,0.34,art('ring'),M.black,0.018,0.02);
+    reliefBase(decor.E,2.25,1.56,0.28,1.1,false); stepped(decor.E,2.25,1.78,[0.1,0.07,0.04]);
+    disc(decor.E,1.46,1.94,0.085,'#bf8f6f',0.02); disc(decor.E,1.46,1.66,0.05,'#e3d8c4',0.035);
+    framed(decor.E,0.56,1.75,0.26,0.36,art('twig'),M.black,0.018,0.02);
+    floatShelf(decor.E,0.42,0.70,1.12,M.oak,0.18); plant(decor.E,0.56,1.138,0.09,'trail',0.7,M.potWhite);
+    setGlow(2,'E',0.56,1.04,0.14,0.45);
+    /* über dem Regal */
+    floatShelf(decor.S,2.0,3.9,1.45,M.oak); plant(decor.S,3.7,1.468,0.1,'trail',0.85,M.potWhite); vase(decor.S,2.25,1.468,0.1,1,M.stone); bowl(decor.S,2.6,1.468,0.1,0.8,M.potClay); books(decor.S,2.9,1.468,0.1,0.16,13,NEUTRAL);
+    setGlow(0,'S',2.95,1.34,0.14,0.6);
+    /* rechts vom Fenster: genau 1 m Lamellen, von der rechten Wand aus gemessen */
+    slats(decor.N,W-1.0,W,0.07,H,'#c9a377',9);
+    floatShelf(decor.N,W-0.84,W-0.3,1.5,M.oak,0.18); plant(decor.N,W-0.42,1.518,0.1,'trail',0.8,M.potWhite); vase(decor.N,W-0.72,1.518,0.1,0.75,M.stone);
+    /* links vom Fenster */
+    floatShelf(decor.N,FL-0.34,FL+0.34,1.3,M.oak,0.18); vase(decor.N,FL-0.17,1.318,0.09,0.85,M.stone); plant(decor.N,FL+0.16,1.318,0.09,'pilea',0.8,M.potClay);
+    waveDisc(decor.N,FL,1.98,0.2,'#e3d8c4',63,0.055);
+  },
+  'lamelle-v1':function(){
     slats(decor.E,0,L,0.07,H,'#c9a377',3);
     whiteboard(decor.E,1.9,0.95,2.0,1.0,null,0.04); [[0.97,1.0],[2.83,1.0],[0.97,1.9],[2.83,1.9]].forEach(function(p){ var c=new T.Mesh(new T.CylinderGeometry(0.012,0.012,0.06,12),M.silver); c.rotation.x=Math.PI/2; c.position.set(p[0],p[1],0.03); decor.E.add(c); });
     bx(decor.E,0.5,0.018,0.07,M.oak,1.9,0.9,0.055); markers(decor.E,1.72,0.909,0.055);
@@ -525,21 +610,23 @@ var BUILD={
     floatShelf(decor.N,FL-0.34,FL+0.34,1.3,M.oak,0.18); vase(decor.N,FL-0.17,1.318,0.09,0.85,M.stone); plant(decor.N,FL+0.16,1.318,0.09,'pilea',0.8,M.potClay); disc(decor.N,FL,1.9,0.2,'#bf8f6f',0.02);
   },
   moos:function(){
-    slats(decor.W,PD,PD+1.2,0.07,H,'#6b5340',8); framed(decor.W,PD+0.6,1.5,0.5,0.7,art('twig'),M.black,0.018,0.026);
-    floatShelf(decor.W,2.4,3.6,1.42,M.smoked); floatShelf(decor.W,2.75,3.95,1.84,M.smoked);
-    vase(decor.W,2.6,1.438,0.1,1,M.stone); books(decor.W,2.85,1.438,0.1,0.2,14,NEUTRAL); plant(decor.W,3.45,1.438,0.1,'trail',0.85,M.potDark);
-    plant(decor.W,2.95,1.858,0.1,'trail',0.8,M.potClay); bowl(decor.W,3.45,1.858,0.1,0.9,M.potDark); vase(decor.W,3.75,1.858,0.1,0.7,M.potWhite);
-    setGlow(0,'W',3.0,1.32,0.14,0.75); setGlow(1,'W',3.35,1.74,0.14,0.6);
-    whiteboard(decor.E,1.7,0.95,1.8,1.0,M.black); bx(decor.E,0.5,0.018,0.07,M.black,1.7,0.9,0.045); markers(decor.E,1.52,0.909,0.045);
-    bx(decor.E,0.6,1.0,0.02,std('#666d57',1),3.0,1.45,0.012); frameBars(decor.E,3.0,1.45,0.6,1.0,M.black,0.022,0.03,0.015);
-    [[2.88,1.7,'#efe9dc'],[3.1,1.62,'#e3d8c4'],[2.95,1.3,'#efe9dc']].forEach(function(n){ bx(decor.E,0.13,0.17,0.003,std(n[2],0.9),n[0],n[1],0.024,{noCast:true}); });
+    /* Rechte Wand: Akzentwand mit Lamellenfeld und zwei Borden */
+    slats(decor.E,2.6,3.8,0.07,H,'#6b5340',8); framed(decor.E,3.2,1.5,0.5,0.7,art('twig'),M.black,0.018,0.026);
+    floatShelf(decor.E,0.9,2.1,1.42,M.smoked); floatShelf(decor.E,0.55,1.75,1.84,M.smoked);
+    vase(decor.E,1.9,1.438,0.1,1,M.stone); books(decor.E,1.45,1.438,0.1,0.2,14,NEUTRAL); plant(decor.E,1.05,1.438,0.1,'trail',0.85,M.potDark);
+    plant(decor.E,1.55,1.858,0.1,'trail',0.8,M.potClay); bowl(decor.E,1.05,1.858,0.1,0.9,M.potDark); vase(decor.E,0.75,1.858,0.1,0.7,M.potWhite);
+    setGlow(0,'E',1.5,1.32,0.14,0.75); setGlow(1,'E',1.15,1.74,0.14,0.6);
+    /* Linke Wand: Whiteboard hinter Platz 1 (u 1,8), daneben die Pinnwand */
+    whiteboard(decor.W,1.8,0.95,1.8,1.0,M.black); bx(decor.W,0.5,0.018,0.07,M.black,1.8,0.9,0.045); markers(decor.W,1.62,0.909,0.045);
+    bx(decor.W,0.6,1.0,0.02,std('#666d57',1),3.1,1.45,0.012); frameBars(decor.W,3.1,1.45,0.6,1.0,M.black,0.022,0.03,0.015);
+    [[2.98,1.7,'#efe9dc'],[3.2,1.62,'#e3d8c4'],[3.05,1.3,'#efe9dc']].forEach(function(n){ bx(decor.W,0.13,0.17,0.003,std(n[2],0.9),n[0],n[1],0.024,{noCast:true}); });
     framed(decor.S,2.6,1.42,0.36,0.46,art('horizon'),M.black,0.016); framed(decor.S,3.2,1.42,0.36,0.46,art('ring'),M.black,0.016);
-    /* links vom Fenster: Moosgrün läuft um die Ecke */
+    /* rechts vom Fenster: Moosgrün läuft um die Ecke */
     if(!M.mossWall) M.mossWall=new T.MeshStandardMaterial({map:limeTex('#666d57',2.2),roughness:0.95});
-    wallPlane(decor.N,0,WIN0,0.07,H,M.mossWall,0.003,true);
-    floatShelf(decor.N,FL-0.34,FL+0.34,1.5,M.smoked,0.18); plant(decor.N,FL+0.17,1.518,0.09,'trail',0.8,M.potDark); bowl(decor.N,FL-0.17,1.518,0.09,0.85,M.potClay); setGlow(2,'N',FL,1.4,0.14,0.6);
-    /* rechts vom Fenster: Lamellenstreifen */
-    slats(decor.N,FR-0.3,FR+0.3,0.07,H,'#6b5340',9);
+    wallPlane(decor.N,WIN1,W,0.07,H,M.mossWall,0.003,true);
+    floatShelf(decor.N,FR-0.34,FR+0.34,1.5,M.smoked,0.18); plant(decor.N,FR+0.17,1.518,0.09,'trail',0.8,M.potDark); bowl(decor.N,FR-0.17,1.518,0.09,0.85,M.potClay); setGlow(2,'N',FR,1.4,0.14,0.6);
+    /* links vom Fenster: Lamellenstreifen */
+    slats(decor.N,FL-0.3,FL+0.3,0.07,H,'#6b5340',9);
   }
 };
 function clearGroup(g){ while(g.children.length){ var c=g.children[0]; g.remove(c); c.traverse(function(o){ if(o.geometry&&o.geometry!==sphereGeo) o.geometry.dispose(); }); } }
