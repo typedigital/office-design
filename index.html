@@ -34,6 +34,11 @@ h2{font-family:var(--font-display);font-weight:600;font-size:22px;margin:0 0 6px
 .seg button:hover,.views button:hover{border-color:var(--muted)}
 .seg button[aria-checked="true"]{background:var(--ink);border-color:var(--ink);color:var(--panel)}
 .seg button[aria-checked="true"] small{color:#c9c4b8}
+.seg3{grid-template-columns:repeat(3,1fr)}
+.seg3 button{text-align:center;font-size:14px;padding:9px 6px;line-height:1.3}
+.seg button:disabled{opacity:.45;cursor:default}
+.group{display:grid;gap:8px}
+.lbl{margin:0;font-size:12.5px;font-weight:700;color:var(--moss)}
 button:focus-visible,canvas:focus-visible{outline:2px solid var(--moss);outline-offset:2px}
 .lead{margin:0;color:var(--ink)}
 dl{margin:0;display:grid;gap:12px}
@@ -72,11 +77,22 @@ canvas:active{cursor:grabbing}
     <p class="dims">Fensterwand gemessen: 1,17 + 2,00 + 1,27 = 4,44 m. Raumtiefe 4,5 m und Höhe 2,7 m geschätzt.</p>
     <h1>Wandkonzepte</h1>
   </header>
-  <div class="seg" role="radiogroup" aria-label="Variante wählen">
-    <button type="button" role="radio" data-v="washi" aria-checked="false">Washi<small>hell, Leiste und Reliefbilder</small></button>
-    <button type="button" role="radio" data-v="lamelle" aria-checked="false">Lamelle<small>Holzwand hinter dem Board</small></button>
-    <button type="button" role="radio" data-v="moos" aria-checked="false">Moos<small>dunkle Akzentwand</small></button>
-    <button type="button" role="radio" data-v="ist" aria-checked="false">Ist-Zustand<small>zum Vergleich</small></button>
+  <div class="group">
+    <p class="lbl" id="lblstyle">Stil</p>
+    <div class="seg" role="radiogroup" aria-labelledby="lblstyle" id="styleseg">
+      <button type="button" role="radio" data-v="washi" aria-checked="false">Washi<small>hell, Leiste und Reliefbilder</small></button>
+      <button type="button" role="radio" data-v="lamelle" aria-checked="false">Lamelle<small>Holzwand hinter dem Board</small></button>
+      <button type="button" role="radio" data-v="moos" aria-checked="false">Moos<small>dunkle Akzentwand</small></button>
+      <button type="button" role="radio" data-v="ist" aria-checked="false">Ist-Zustand<small>zum Vergleich</small></button>
+    </div>
+  </div>
+  <div class="group">
+    <p class="lbl" id="lbllight">Deckenlicht</p>
+    <div class="seg seg3" role="radiogroup" aria-labelledby="lbllight" id="lightseg">
+      <button type="button" role="radio" data-l="standard" aria-checked="true">Standard</button>
+      <button type="button" role="radio" data-l="haengend" aria-checked="false">Hängend</button>
+      <button type="button" role="radio" data-l="einzeln" aria-checked="false">Einzeln hängend</button>
+    </div>
   </div>
   <section aria-live="polite">
     <h2 id="vname"></h2>
@@ -146,34 +162,57 @@ var VIEWS=[
   ['platz','Von Platz 1',[0.55,1.7,3.75],[4.44,1.5,1.7],64],
   ['tuer','Von der Tür',[3.85,1.62,4.2],[0.4,1.25,1.2],68]
 ];
-var current='washi';
+var LIGHTS=['standard','haengend','einzeln'];
+var LIGHTINFO={
+  standard:'Die beiden vorhandenen LED-Panels bleiben.',
+  washi:{haengend:'Zwei große ovale Papierlaternen, Ø 65 cm, über der Tischmitte. Unterkante auf 2,0 m, der Blick zum Whiteboard bleibt frei.',
+         einzeln:'Vier kleine Papierlaternen, Ø 40 cm, je eine über jedem Arbeitsplatz.'},
+  lamelle:{haengend:'Eine Lichtleiste in Eiche über der Tischmitte, zwei Segmente von je 1,4 m in einer Linie.',
+           einzeln:'Vier Lichtleisten in Eiche, je 1,2 m, eine längs über jedem Tisch.'},
+  moos:{haengend:'Drei schwarze Pendelleuchten mit Schirm, Ø 45 cm, in einer Reihe über der Tischmitte.',
+        einzeln:'Vier kleine schwarze Pendelleuchten, Ø 30 cm, je eine über jedem Arbeitsplatz.'}
+};
+var current='washi',light='standard';
 
 function fillPanel(key){
   var v=INFO[key];
   document.getElementById('vname').textContent=v.name;
   document.getElementById('vlead').textContent=v.lead;
   var dl=document.getElementById('vwalls'); dl.textContent='';
-  v.walls.forEach(function(w){ var d=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd'); dt.textContent=w[0]; dd.textContent=w[1]; d.appendChild(dt); d.appendChild(dd); dl.appendChild(d); });
+  var lightText=(key==='ist'||light==='standard')?LIGHTINFO.standard:LIGHTINFO[key][light];
+  [['Deckenlicht',lightText]].concat(v.walls).forEach(function(w){ var d=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd'); dt.textContent=w[0]; dd.textContent=w[1]; d.appendChild(dt); d.appendChild(dd); dl.appendChild(d); });
   var ul=document.getElementById('vmats'); ul.textContent='';
   v.mats.forEach(function(m){ var li=document.createElement('li'),i=document.createElement('i'); i.style.background=m[0]; li.appendChild(i); li.appendChild(document.createTextNode(m[1])); ul.appendChild(li); });
   var ef=document.getElementById('veffort'); ef.textContent='';
   if(v.effort){ var b=document.createElement('b'),s=document.createElement('span'),t=document.createElement('span'); s.className='dots'; s.setAttribute('aria-hidden','true');
     s.textContent='●●●'.slice(0,v.effort)+'○○○'.slice(0,3-v.effort); b.textContent='Aufwand '+['','gering','mittel','hoch'][v.effort]; t.textContent=v.effortText; ef.appendChild(s); ef.appendChild(b); ef.appendChild(t); ef.style.display=''; }
   else ef.style.display='none';
-  Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(b){ b.setAttribute('aria-checked',b.dataset.v===key?'true':'false'); });
+  Array.prototype.forEach.call(document.querySelectorAll('#styleseg button'),function(b){ b.setAttribute('aria-checked',b.dataset.v===key?'true':'false'); });
+  Array.prototype.forEach.call(document.querySelectorAll('#lightseg button'),function(b){ var on=(key==='ist'?'standard':light)===b.dataset.l; b.setAttribute('aria-checked',on?'true':'false'); b.disabled=(key==='ist'&&b.dataset.l!=='standard'); });
 }
+function hashName(){ return current+(light==='standard'||current==='ist'?'':'-'+light); }
+function readHash(){ var p=(location.hash||'').replace('#','').split('-'); return {v:INFO[p[0]]?p[0]:null,l:LIGHTS.indexOf(p[1])>0?p[1]:'standard'}; }
+function writeHash(){ try{ if(location.hash!=='#'+hashName()) location.hash=hashName(); }catch(e){} }
 function setVariant(key,fromHash){
   if(!INFO[key]) key='washi';
   current=key; fillPanel(key);
   if(renderer) applyVariant(key);
-  if(!fromHash){ try{ if(location.hash!=='#'+key) location.hash=key; }catch(e){} }
+  if(!fromHash) writeHash();
 }
-Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(b){ b.addEventListener('click',function(){ setVariant(b.dataset.v); }); });
-window.addEventListener('hashchange',function(){ var k=location.hash.replace('#',''); if(INFO[k]&&k!==current) setVariant(k,true); });
+function setLight(l,fromHash){
+  if(LIGHTS.indexOf(l)<0) l='standard';
+  light=l; fillPanel(current);
+  if(renderer) buildLight(current,light);
+  if(!fromHash) writeHash();
+}
+Array.prototype.forEach.call(document.querySelectorAll('#styleseg button'),function(b){ b.addEventListener('click',function(){ setVariant(b.dataset.v); }); });
+Array.prototype.forEach.call(document.querySelectorAll('#lightseg button'),function(b){ b.addEventListener('click',function(){ setLight(b.dataset.l); }); });
+window.addEventListener('hashchange',function(){ if(location.hash==='#'+hashName()) return; var h=readHash(); if(!h.v) return; light=h.l; setVariant(h.v,true); });
+var h0=readHash(); light=h0.l;
 var viewBox=document.getElementById('views');
 VIEWS.forEach(function(v){ var b=document.createElement('button'); b.type='button'; b.textContent=v[1]; b.dataset.view=v[0]; b.setAttribute('aria-pressed','false'); b.addEventListener('click',function(){ setView(v[0],true); }); viewBox.appendChild(b); });
 
-if(!renderer){ setVariant((location.hash||'').replace('#','')||'washi',true); return; }
+if(!renderer){ setVariant(h0.v||'washi',true); return; }
 
 /* ---------- Maße (Meter) ---------- */
 var W=4.44,L=4.5,H=2.7;            /* Breite gemessen, Tiefe und Höhe geschätzt */
@@ -371,6 +410,45 @@ var sc=sun.shadow.camera; sc.left=-5; sc.right=5; sc.top=5; sc.bottom=-5; sc.nea
 var lamp=new T.PointLight(C('#fff3e2'),0.66,11,1.1); lamp.position.set(W/2,H-0.25,L/2); lamp.castShadow=true; lamp.shadow.mapSize.set(1024,1024); lamp.shadow.bias=-0.004; lamp.shadow.camera.near=0.1; lamp.shadow.camera.far=9; scene.add(lamp);
 var fill=new T.DirectionalLight(C('#f2f4ff'),0.22); fill.position.set(5,5,7); scene.add(fill);
 var glow=[0,1,2].map(function(){ var p=new T.PointLight(C('#ffc98a'),0,1.9,1.4); scene.add(p); return p; });
+/* ---------- Deckenlicht: Standard (Panels), hängend, einzeln hängend ---------- */
+var lightFix=new T.Group(); room.add(lightFix);
+var pend=[0,1,2,3].map(function(){ var p=new T.PointLight(C('#ffd7a3'),0,3.8,1.4); scene.add(p); return p; });
+var showPanels=true,HB=2.0;      /* HB = Unterkante der Pendelleuchten */
+var lanternTex=canvasTex(64,256,function(g,w,h){ g.fillStyle='#fff3dc'; g.fillRect(0,0,w,h); g.fillStyle='rgba(170,140,95,.35)'; for(var y=6;y<h;y+=10) g.fillRect(0,y,w,1.4); });
+var ML={
+  lantern:new T.MeshStandardMaterial({map:lanternTex,emissive:C('#ffe6bd'),emissiveMap:lanternTex,emissiveIntensity:0.95,roughness:1}),
+  domeOut:new T.MeshStandardMaterial({color:C('#1c1c1e'),roughness:0.55,side:T.DoubleSide}),
+  domeIn:new T.MeshBasicMaterial({color:new T.Color('#ffe2b0'),toneMapped:false})
+};
+function hang(x,z,yBot){ var hgt=H-yBot,wm=new T.Mesh(new T.CylinderGeometry(0.004,0.004,hgt,6),M.black); wm.position.set(x,yBot+hgt/2,z); lightFix.add(wm);
+  var c=new T.Mesh(new T.CylinderGeometry(0.05,0.05,0.02,20),M.black); c.position.set(x,H-0.01,z); lightFix.add(c); }
+function lantern(x,z,r,sq){ var m=new T.Mesh(new T.SphereGeometry(r,36,24),ML.lantern); m.scale.y=sq; m.position.set(x,HB+r*sq,z); lightFix.add(m);
+  [1,-1].forEach(function(s){ var cap=new T.Mesh(new T.CylinderGeometry(r*0.2,r*0.2,0.015,20),M.oak); cap.position.set(x,HB+r*sq+s*(r*sq-0.004),z); lightFix.add(cap); });
+  hang(x,z,HB+2*r*sq); }
+function lightBar(x,z,len){ var y=HB+0.03,b=new T.Mesh(new T.BoxGeometry(0.07,0.05,len),M.oak); b.position.set(x,y,z); lightFix.add(b);
+  var l=new T.Mesh(new T.BoxGeometry(0.045,0.006,len-0.04),M.led); l.position.set(x,y-0.027,z); lightFix.add(l);
+  [1,-1].forEach(function(s){ var cap=new T.Mesh(new T.BoxGeometry(0.074,0.054,0.012),M.black); cap.position.set(x,y,z+s*len/2); lightFix.add(cap); hang(x,z+s*(len/2-0.15),y+0.025); }); }
+function dome(x,z,r){ var m=new T.Mesh(new T.SphereGeometry(r,36,16,0,Math.PI*2,0,Math.PI/2),ML.domeOut); m.scale.y=0.8; m.position.set(x,HB,z); lightFix.add(m);
+  var d=new T.Mesh(new T.CircleGeometry(r*0.94,36),ML.domeIn); d.rotation.x=Math.PI/2; d.position.set(x,HB+0.012,z); lightFix.add(d);
+  hang(x,z,HB+r*0.8); }
+var DESKC=[[C0-0.4,1.1],[C0+0.4,1.1],[C0-0.4,2.7],[C0+0.4,2.7]];
+function buildLight(style,mode){
+  clearGroup(lightFix); pend.forEach(function(p){ p.intensity=0; });
+  if(style==='ist') mode='standard';
+  showPanels=(mode==='standard'); lamp.intensity=showPanels?0.66:0.36;
+  var spots=[];
+  if(mode==='haengend'){
+    if(style==='washi'){ spots=[[C0,1.1],[C0,2.7]]; spots.forEach(function(s){ lantern(s[0],s[1],0.33,0.8); }); }
+    else if(style==='lamelle'){ spots=[[C0,1.15],[C0,2.65]]; spots.forEach(function(s){ lightBar(s[0],s[1],1.4); }); }
+    else { spots=[[C0,0.9],[C0,1.9],[C0,2.9]]; spots.forEach(function(s){ dome(s[0],s[1],0.225); }); }
+  } else if(mode==='einzeln'){
+    spots=DESKC;
+    spots.forEach(function(s){ if(style==='washi') lantern(s[0],s[1],0.2,0.85); else if(style==='lamelle') lightBar(s[0],s[1],1.2); else dome(s[0],s[1],0.15); });
+  }
+  var k=spots.length>3?0.36:spots.length===3?0.44:0.58;
+  spots.forEach(function(s,i){ pend[i].position.set(s[0],HB-0.06,s[1]); pend[i].intensity=k; });
+  dirty=true;
+}
 scene.updateMatrixWorld(true);
 function setGlow(i,key,u,y,d,intensity){ var v=new T.Vector3(u,y,d); frame[key].localToWorld(v); glow[i].position.copy(v); glow[i].intensity=intensity; }
 
@@ -471,6 +549,7 @@ function applyVariant(key){
   ['N','E','S','W'].forEach(function(k){ clearGroup(decor[k]); });
   glow.forEach(function(gl){ gl.intensity=0; });
   BUILD[key]();
+  buildLight(key,light);
   scene.updateMatrixWorld(true);
   shadowDirty=true; dirty=true;
 }
@@ -489,7 +568,7 @@ function setView(id,animate){ var v=null; VIEWS.forEach(function(x){ if(x[0]===i
   dirty=true; }
 var tmp=new T.Vector3();
 function updateVis(all){ ['N','E','S','W'].forEach(function(k){ var front=true; if(!all){ tmp.copy(camera.position); frame[k].worldToLocal(tmp); front=tmp.z>0.001; } fix[k].visible=front; decor[k].visible=front; });
-  pillar.visible=all||(camera.position.x>0&&camera.position.z<L); ceilFix.visible=all||camera.position.y<H; }
+  pillar.visible=all||(camera.position.x>0&&camera.position.z<L); ceilFix.visible=showPanels&&(all||camera.position.y<H); }
 function render(){ if(shadowDirty){ updateVis(true); renderer.shadowMap.needsUpdate=true; renderer.render(scene,camera); shadowDirty=false; } updateVis(false); renderer.render(scene,camera); }
 function resize(){ var m=canvas.parentElement,w=m.clientWidth,h=m.clientHeight; if(!w||!h) return; renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2)); renderer.setSize(w,h,false); camera.aspect=w/h; applyFov(); dirty=true; }
 function tick(now){ if(tween){ var k=Math.min(1,(now-tween.t0)/tween.dur),e=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2; var p=new T.Vector3().lerpVectors(tween.p0,tween.p1,e),t=new T.Vector3().lerpVectors(tween.t0v,tween.t1,e); baseFov=tween.f0+(tween.f1-tween.f0)*e; applyFov(); fromPose(p,t); placeCamera(); if(k>=1) tween=null; dirty=true; }
@@ -513,11 +592,11 @@ if(window.ResizeObserver) new ResizeObserver(resize).observe(canvas.parentElemen
 
 window.__office={
   pose:function(p,t,f){ tween=null; markView(''); baseFov=f; applyFov(); fromPose(new T.Vector3().fromArray(p),new T.Vector3().fromArray(t)); placeCamera(); dirty=true; },
-  setVariant:setVariant,setView:function(id){ setView(id,false); },render:function(){ resize(); render(); }
+  setVariant:setVariant,setLight:function(l){ setLight(l,true); },setView:function(id){ setView(id,false); },render:function(){ resize(); render(); }
 };
 resize();
 setView('ost',false);
-setVariant((location.hash||'').replace('#','')||'washi',true);
+setVariant(h0.v||'washi',true);
 requestAnimationFrame(tick);
 })();
 </script>
